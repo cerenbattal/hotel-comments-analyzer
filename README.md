@@ -29,9 +29,24 @@ frontend/  Next.js app: search page and hotel report page
 5. **Summarize** (`claude-sonnet-5-5`): ranked pros and cons with quotes, and a 3-4 sentence
    summary in the reader's language. Server-side refusal fallbacks are enabled.
 
-Results are cached in memory for 6 hours per hotel and language.
+Reports are built in a background task: `POST /report` starts a build and the page polls
+`GET /report` until it is done. Finished reports are stored in the database and reused for
+6 hours. Each build also saves every source's score for that day, which feeds the
+"score over time" chart. Raw review text is kept only in memory (Google's terms limit storing it).
 
 ## Running locally
+
+### With Docker (simplest)
+
+```bash
+cp backend/.env.example backend/.env   # then add your keys to backend/.env
+docker compose up --build
+```
+
+App: http://localhost:3000 · API docs: http://localhost:8000/docs · Postgres runs in its own
+container and keeps its data in a Docker volume.
+
+### Without Docker
 
 Backend (Python 3.11+):
 
@@ -63,7 +78,9 @@ key is still needed for the analysis.
 | --- | --- | --- |
 | GET | `/api/health` | `{ok, demo_mode}` |
 | GET | `/api/hotels/search?q=&lang=` | Hotel candidates (Google Places) |
-| GET | `/api/hotels/{id}/report?lang=tr\|en\|de` | Full report |
+| POST | `/api/hotels/{id}/report?lang=tr\|en\|de` | Start a build, or return a fresh report |
+| GET | `/api/hotels/{id}/report?lang=` | `{status: running\|done\|failed, report, error}` |
+| GET | `/api/hotels/{id}/history` | Daily score per source |
 | POST | `/api/hotels/{id}/ask` | `{question, lang}` → `{answer, quotes}` |
 
 ## Terms to respect
@@ -74,6 +91,8 @@ key is still needed for the analysis.
 
 ## Next steps
 
-- Postgres + background jobs (Celery/Redis) instead of the in-memory cache.
-- Sentiment over time, once dated review history is available from partner or vendor data.
+- A daily job that refreshes popular hotels, so score history fills in without visits.
+- Alembic migrations before the first schema change in production.
+- Move builds to a job queue (Celery/Redis or similar) if one server is no longer enough.
+- Sentiment by topic over time, once dated review history is available from partner or vendor data.
 - Booking.com / Expedia Rapid / Agoda affiliate connectors after partner approval.

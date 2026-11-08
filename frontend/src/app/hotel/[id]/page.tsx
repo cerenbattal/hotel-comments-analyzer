@@ -4,8 +4,9 @@ import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
+import { HistoryChart } from "@/components/HistoryChart";
 import { LangSwitch } from "@/components/LangSwitch";
-import { api, type AskAnswer, type Lang, type Point, type Report } from "@/lib/api";
+import { api, type AskAnswer, type HistoryPoint, type Lang, type Point, type Report } from "@/lib/api";
 import { parseLang, t, type Strings } from "@/lib/i18n";
 
 function scoreColor(score: number) {
@@ -110,14 +111,26 @@ function HotelReport() {
   const [report, setReport] = useState<Report | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const [history, setHistory] = useState<HistoryPoint[]>([]);
+
   useEffect(() => {
     let cancelled = false;
     setReport(null);
     setError(null);
-    api
-      .report(hotelId, lang)
-      .then((r) => !cancelled && setReport(r))
-      .catch((err) => !cancelled && setError(err instanceof Error ? err.message : String(err)));
+
+    // Start the build (or get a fresh report), then poll until it finishes.
+    async function load() {
+      let job = await api.startReport(hotelId, lang);
+      while (job.status === "running" && !cancelled) {
+        await new Promise((r) => setTimeout(r, 2000));
+        job = await api.reportStatus(hotelId, lang);
+      }
+      if (cancelled) return;
+      if (job.status === "failed" || !job.report) throw new Error(job.error ?? "Report failed");
+      setReport(job.report);
+      setHistory(await api.history(hotelId));
+    }
+    load().catch((err) => !cancelled && setError(err instanceof Error ? err.message : String(err)));
     return () => {
       cancelled = true;
     };
@@ -200,6 +213,17 @@ function HotelReport() {
               </tbody>
             </table>
             <p className="mt-3 text-xs text-slate-500">{s.overallNote}</p>
+          </Card>
+
+          <Card title={s.history}>
+            {new Set(history.map((h) => h.day)).size >= 2 ? (
+              <HistoryChart
+                points={history}
+                labels={Object.fromEntries(report.sources.map((src) => [src.source, src.source_label]))}
+              />
+            ) : (
+              <p className="text-sm text-slate-600">{s.historyEmpty}</p>
+            )}
           </Card>
 
           <div className="grid gap-5 md:grid-cols-2">

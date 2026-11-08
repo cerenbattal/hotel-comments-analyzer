@@ -47,6 +47,19 @@ export interface Report {
   summary: string;
 }
 
+export interface ReportJob {
+  status: "running" | "done" | "failed";
+  report: Report | null;
+  error: string | null;
+}
+
+export interface HistoryPoint {
+  source: string;
+  day: string; // YYYY-MM-DD
+  score_10: number | null;
+  review_count: number;
+}
+
 export interface AskAnswer {
   answer: string;
   quotes: string[];
@@ -66,8 +79,14 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 export const api = {
   search: (q: string, lang: Lang) =>
     request<HotelCandidate[]>(`/api/hotels/search?q=${encodeURIComponent(q)}&lang=${lang}`),
-  report: (id: string, lang: Lang) =>
-    request<Report>(`/api/hotels/${encodeURIComponent(id)}/report?lang=${lang}`),
+  startReport: (id: string, lang: Lang) =>
+    request<ReportJob>(`/api/hotels/${encodeURIComponent(id)}/report?lang=${lang}`, {
+      method: "POST",
+    }),
+  reportStatus: (id: string, lang: Lang) =>
+    request<ReportJob>(`/api/hotels/${encodeURIComponent(id)}/report?lang=${lang}`),
+  history: (id: string) =>
+    request<HistoryPoint[]>(`/api/hotels/${encodeURIComponent(id)}/history`),
   ask: (id: string, question: string, lang: Lang) =>
     request<AskAnswer>(`/api/hotels/${encodeURIComponent(id)}/ask`, {
       method: "POST",

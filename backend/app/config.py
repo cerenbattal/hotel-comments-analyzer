@@ -14,6 +14,10 @@ class Settings(BaseSettings):
     # Final summary and "ask the reviews" answers.
     summary_model: str = "claude-sonnet-5-5"
 
+    # SQLite for local development; docker-compose sets a Postgres URL
+    # (postgresql+asyncpg://user:pass@host/db).
+    database_url: str = "sqlite+aiosqlite:///./hotel.db"
+
     # Comma-separated origins allowed to call the API (the Next.js frontend).
     cors_origins: str = "http://localhost:3000"
     cache_ttl_seconds: int = 6 * 60 * 60
