@@ -1,0 +1,47 @@
+{
+  "_note": "Fictional hotel and reviews written for demo and development. Not real guest data.",
+  "hotel": {
+    "id": "demo:seaside",
+    "name": "Seaside Demo Hotel (fictional)",
+    "address": "Demo Street 1, Antalya, Türkiye",
+    "rating": 4.3,
+    "review_count": 1840
+  },
+  "sources": [
+    {
+      "source": "google",
+      "source_label": "Google Maps (demo)",
+      "external_id": "demo-google",
+      "rating": 4.3,
+      "scale_max": 5,
+      "review_count": 1840,
+      "attribution": "Demo data",
+      "reviews": [
+        {"id": "google:0", "source": "google", "rating": 5, "scale_max": 5, "language": "tr", "published": "2026-09-14", "text": "Personel çok ilgiliydi, resepsiyondaki Ayşe Hanım her sorumuza yardımcı oldu. Kahvaltı çeşidi bol, denize yürüme mesafesi 2 dakika."},
+        {"id": "google:1", "source": "google", "rating": 2, "scale_max": 5, "language": "tr", "published": "2026-08-02", "text": "Oda temizdi ama gece yan taraftaki bardan gelen müzik yüzünden uyuyamadık. Wi-Fi odada neredeyse hiç çekmiyor."},
+        {"id": "google:2", "source": "google", "rating": 5, "scale_max": 5, "language": "en", "published": "2026-07-21", "text": "Fantastic location right on the beach. Staff were warm and remembered our names. Rooms are a bit dated but spotless."},
+        {"id": "google:3", "source": "google", "rating": 4, "scale_max": 5, "language": "de", "published": "2026-06-30", "text": "Sehr freundliches Personal und ein tolles Frühstücksbuffet. Das Zimmer war sauber, aber das Badezimmer etwas klein."},
+        {"id": "google:4", "source": "google", "rating": 3, "scale_max": 5, "language": "en", "published": "2026-05-11", "text": "Good value for the price, but the pool area gets very crowded and loungers are taken by 8am. Noise from the street at night."},
+        {"id": "google:5", "source": "google", "rating": 5, "scale_max": 5, "language": "tr", "published": "2026-04-03", "text": "Fiyatına göre gerçekten çok iyi. Temizlik harika, akşam yemekleri lezzetliydi. Tekrar geleceğiz."},
+        {"id": "google:6", "source": "google", "rating": 1, "scale_max": 5, "language": "en", "published": "2025-11-19", "text": "Air conditioning broken for two days and nobody fixed it. Front desk was rude when we complained."}
+      ]
+    },
+    {
+      "source": "tripadvisor",
+      "source_label": "Tripadvisor (demo)",
+      "external_id": "demo-ta",
+      "rating": 4.0,
+      "scale_max": 5,
+      "review_count": 912,
+      "attribution": "Demo data",
+      "reviews": [
+        {"id": "tripadvisor:0", "source": "tripadvisor", "rating": 4, "scale_max": 5, "language": "de", "published": "2026-09-01", "text": "Lage direkt am Strand ist unschlagbar. Leider war es nachts wegen der Bars in der Nähe laut. Frühstück gut."},
+        {"id": "tripadvisor:1", "source": "tripadvisor", "rating": 5, "scale_max": 5, "language": "en", "published": "2026-08-15", "text": "Kids loved the pool and the animation team. Rooms cleaned every day, towels changed. Breakfast had great Turkish options."},
+        {"id": "tripadvisor:2", "source": "tripadvisor", "rating": 2, "scale_max": 5, "language": "tr", "published": "2026-07-09", "text": "Odalar eski ve küf kokuyordu. Wi-Fi sadece lobide çalışıyor. Personel güler yüzlü ama sorunları çözmüyorlar."},
+        {"id": "tripadvisor:3", "source": "tripadvisor", "rating": 4, "scale_max": 5, "language": "en", "published": "2026-03-28", "text": "Excellent value outside peak season. Quiet in March, friendly staff, decent food. Wi-Fi was slow."},
+        {"id": "tripadvisor:4", "source": "tripadvisor", "rating": 5, "scale_max": 5, "language": "de", "published": "2026-02-17", "text": "Sauberes Hotel, hilfsbereites Personal, Strand in zwei Minuten erreichbar. Preis-Leistung top."},
+        {"id": "tripadvisor:5", "source": "tripadvisor", "rating": 3, "scale_max": 5, "language": "en", "published": "2025-12-05", "text": "Location is great but the restaurant food was repetitive after three days. Bathroom needs renovation."}
+      ]
+    }
+  ]
+}
