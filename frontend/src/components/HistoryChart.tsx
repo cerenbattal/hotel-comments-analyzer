@@ -26,7 +26,8 @@ export function HistoryChart({ points, labels }: { points: HistoryPoint[]; label
   const fmt = (day: string) => `${day.slice(8, 10)}.${day.slice(5, 7)}.${day.slice(0, 4)}`;
 
   return (
-    <div>
+    // Time runs left to right even in right-to-left languages.
+    <div dir="ltr">
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img">
         {[0, 2.5, 5, 7.5, 10].map((v) => (
           <g key={v}>

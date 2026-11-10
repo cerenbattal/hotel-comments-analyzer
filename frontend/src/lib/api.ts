@@ -1,4 +1,4 @@
-export type Lang = "tr" | "en" | "de";
+export type Lang = "tr" | "en" | "de" | "fr" | "es" | "ru" | "ar";
 
 export interface HotelCandidate {
   id: string;

@@ -7,7 +7,7 @@ import { Suspense, useEffect, useState } from "react";
 import { LangSwitch } from "@/components/LangSwitch";
 import { loadReport, type Lang, type Report } from "@/lib/api";
 import { MAX_COMPARE } from "@/lib/compare";
-import { parseLang, t, type Strings } from "@/lib/i18n";
+import { numberLocale, parseLang, t, type Strings } from "@/lib/i18n";
 
 type Row = { label: string; values: (number | null)[] };
 
@@ -110,7 +110,7 @@ function Compare() {
               <tr className="border-b border-slate-200">
                 <th className="w-44 p-3" />
                 {ready.map((r) => (
-                  <th key={r.hotel_id} className="p-3 text-left align-top font-semibold">
+                  <th key={r.hotel_id} className="p-3 text-start align-top font-semibold">
                     <Link
                       href={`/hotel/${encodeURIComponent(r.hotel_id)}?lang=${lang}`}
                       className="hover:underline"
@@ -118,7 +118,7 @@ function Compare() {
                       {r.hotel_name}
                     </Link>
                     <div className="mt-0.5 text-xs font-normal text-slate-500">
-                      {r.total_reviews.toLocaleString(lang)} {s.reviews}
+                      {r.total_reviews.toLocaleString(numberLocale(lang))} {s.reviews}
                     </div>
                   </th>
                 ))}

@@ -1,22 +1,29 @@
 "use client";
 
+import { useEffect } from "react";
+
 import type { Lang } from "@/lib/api";
-import { LANGS } from "@/lib/i18n";
+import { LANGS, RTL } from "@/lib/i18n";
 
 export function LangSwitch({ lang, onChange }: { lang: Lang; onChange: (l: Lang) => void }) {
+  // Keep the page's language and text direction in step with the chosen language.
+  useEffect(() => {
+    document.documentElement.lang = lang;
+    document.documentElement.dir = RTL.has(lang) ? "rtl" : "ltr";
+  }, [lang]);
+
   return (
-    <div className="flex gap-1 rounded-lg bg-white p-1 text-sm shadow-sm ring-1 ring-slate-200">
+    <select
+      value={lang}
+      onChange={(e) => onChange(e.target.value as Lang)}
+      aria-label="Language"
+      className="rounded-lg bg-white px-2.5 py-1.5 text-sm shadow-sm ring-1 ring-slate-200 outline-none hover:ring-slate-400 focus:ring-slate-900"
+    >
       {LANGS.map((l) => (
-        <button
-          key={l.code}
-          onClick={() => onChange(l.code)}
-          className={`rounded-md px-2.5 py-1 ${
-            l.code === lang ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100"
-          }`}
-        >
+        <option key={l.code} value={l.code}>
           {l.label}
-        </button>
+        </option>
       ))}
-    </div>
+    </select>
   );
 }

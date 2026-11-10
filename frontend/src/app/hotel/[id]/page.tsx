@@ -7,7 +7,7 @@ import { Suspense, useEffect, useState } from "react";
 import { HistoryChart } from "@/components/HistoryChart";
 import { LangSwitch } from "@/components/LangSwitch";
 import { api, loadReport, type AskAnswer, type HistoryPoint, type Lang, type Point, type Report } from "@/lib/api";
-import { parseLang, t, type Strings } from "@/lib/i18n";
+import { numberLocale, parseLang, t, type Strings } from "@/lib/i18n";
 
 function scoreColor(score: number) {
   if (score >= 8) return "bg-emerald-600";
@@ -46,7 +46,7 @@ function Points({ points, s, tone }: { points: Point[]; s: Strings; tone: "pro" 
             </span>
           </div>
           {p.quotes.map((q) => (
-            <p key={q} className="mt-1 border-l-2 border-slate-200 pl-3 text-sm text-slate-600 italic">
+            <p key={q} className="mt-1 border-s-2 border-slate-200 ps-3 text-sm text-slate-600 italic">
               “{q}”
             </p>
           ))}
@@ -98,7 +98,7 @@ function Ask({ hotelId, lang, s }: { hotelId: string; lang: Lang; s: Strings }) 
         <div className="mt-4">
           <p>{answer.answer}</p>
           {answer.quotes.map((q) => (
-            <p key={q} className="mt-2 border-l-2 border-slate-200 pl-3 text-sm text-slate-600 italic">
+            <p key={q} className="mt-2 border-s-2 border-slate-200 ps-3 text-sm text-slate-600 italic">
               “{q}”
             </p>
           ))}
@@ -180,7 +180,7 @@ function HotelReport() {
               <p className="text-slate-600">{report.address}</p>
             </div>
             {report.overall_score_10 != null && (
-              <div className="text-right">
+              <div className="text-end">
                 <div
                   className={`inline-block rounded-xl px-4 py-2 text-3xl font-bold text-white ${scoreColor(report.overall_score_10)}`}
                 >
@@ -207,7 +207,7 @@ function HotelReport() {
               ) : (
                 <div className="rounded-lg bg-amber-50 p-3 text-sm text-amber-950 ring-1 ring-amber-200">
                   <p className="font-medium">⚠ {s.trustCaution}</p>
-                  <ul className="mt-2 list-disc space-y-1 pl-5">
+                  <ul className="mt-2 list-disc space-y-1 ps-5">
                     {report.trust.flags.map((f, i) => (
                       <li key={i}>{s.trustFlag[f.code](f)}</li>
                     ))}
@@ -232,12 +232,12 @@ function HotelReport() {
                         src.source_label
                       )}
                     </td>
-                    <td className="py-2 text-right">
+                    <td className="py-2 text-end">
                       {src.rating ?? "–"} / {src.scale_max}
                     </td>
-                    <td className="py-2 text-right font-semibold">{src.score_10?.toFixed(1) ?? "–"}</td>
-                    <td className="py-2 text-right text-slate-500">
-                      {src.review_count.toLocaleString(lang)} {s.reviews}
+                    <td className="py-2 text-end font-semibold">{src.score_10?.toFixed(1) ?? "–"}</td>
+                    <td className="py-2 text-end text-slate-500">
+                      {src.review_count.toLocaleString(numberLocale(lang))} {s.reviews}
                     </td>
                   </tr>
                 ))}
@@ -278,7 +278,7 @@ function HotelReport() {
                         style={{ width: `${tp.score_10 * 10}%` }}
                       />
                     </div>
-                    <span className="text-right font-medium">{tp.score_10.toFixed(1)}</span>
+                    <span className="text-end font-medium">{tp.score_10.toFixed(1)}</span>
                   </li>
                 ))}
               </ul>

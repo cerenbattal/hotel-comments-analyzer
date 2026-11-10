@@ -7,7 +7,7 @@ import { Suspense, useState } from "react";
 import { LangSwitch } from "@/components/LangSwitch";
 import { api, type HotelCandidate, type Lang } from "@/lib/api";
 import { MAX_COMPARE, useCompareList } from "@/lib/compare";
-import { parseLang, t } from "@/lib/i18n";
+import { numberLocale, parseLang, t } from "@/lib/i18n";
 
 function Home() {
   const router = useRouter();
@@ -74,7 +74,7 @@ function Home() {
               <div className="text-sm text-slate-600">{h.address}</div>
               {h.rating != null && (
                 <div className="mt-1 text-sm text-slate-500">
-                  ★ {h.rating} · {h.review_count?.toLocaleString(lang)} {s.reviews}
+                  ★ {h.rating} · {h.review_count?.toLocaleString(numberLocale(lang))} {s.reviews}
                 </div>
               )}
             </Link>

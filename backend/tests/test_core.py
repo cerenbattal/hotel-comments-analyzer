@@ -316,3 +316,22 @@ async def test_refresh_scores_only_recent_real_hotels(api):
     assert sorted(fetched) == ["g-broken", "g-recent"]
     points = await svc.history("g-recent")
     assert [(p.source, p.score_10, p.review_count) for p in points] == [("google", 8.75, 99)]
+
+
+def test_every_language_has_a_name_for_claude():
+    from typing import get_args
+
+    from app.analysis import LANG_NAMES
+    from app.models import Lang
+
+    assert set(get_args(Lang)) == set(LANG_NAMES)
+
+
+async def test_new_languages_are_accepted_and_unknown_rejected(api):
+    client, svc, _ = api
+    url = "/api/hotels/demo:seaside/report"
+    for lang in ("fr", "es", "ru", "ar"):
+        assert (await client.post(url, params={"lang": lang})).status_code == 202
+    await svc.wait_for_builds()
+    assert (await client.get(url, params={"lang": "ar"})).json()["report"]["lang"] == "ar"
+    assert (await client.post(url, params={"lang": "xx"})).status_code == 422
