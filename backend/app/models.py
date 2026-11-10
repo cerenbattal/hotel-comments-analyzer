@@ -85,6 +85,30 @@ class Point(BaseModel):
     quotes: list[str] = Field(default_factory=list)
 
 
+FlagCode = Literal[
+    "source_gap",  # one source scores the hotel far above the others
+    "five_star_burst",  # many 5-star reviews within a few days
+    "duplicate_text",  # near-identical texts under different reviews
+    "rating_text_mismatch",  # e.g. 5 stars on a text that only complains
+    "short_five_star",  # many very short 5-star reviews
+]
+
+
+class TrustFlag(BaseModel):
+    code: FlagCode
+    # Values the frontend puts into its translated sentence for this code.
+    source: str | None = None
+    gap: float | None = None
+    count: int | None = None
+    total: int | None = None
+    days: int | None = None
+
+
+class Trust(BaseModel):
+    level: Literal["ok", "caution"] = "ok"
+    flags: list[TrustFlag] = Field(default_factory=list)
+
+
 class Report(BaseModel):
     hotel_id: str
     hotel_name: str
@@ -98,6 +122,8 @@ class Report(BaseModel):
     pros: list[Point]
     cons: list[Point]
     summary: str
+    # Reports stored before trust signals existed have none.
+    trust: Trust = Field(default_factory=Trust)
 
 
 class ReportJob(BaseModel):

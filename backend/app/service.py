@@ -33,6 +33,7 @@ from .models import (
     SourceScore,
 )
 from .normalize import overall_score, source_score
+from .trust import assess
 
 log = logging.getLogger(__name__)
 
@@ -243,6 +244,7 @@ class ReportService:
             pros=pros,
             cons=cons,
             summary=text,
+            trust=assess(scores, data.reviews, insights),
         )
 
     # ---------- score history ----------

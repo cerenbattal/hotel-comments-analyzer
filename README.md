@@ -2,7 +2,7 @@
 
 Search a hotel and see its guest reviews from several sites in one report: a score per source,
 a normalized overall score (0-10), the main pros and cons with real quotes, scores by topic, a
-score-over-time chart, and an "ask the reviews" box. Up to 4 hotels can be compared side by side,
+score-over-time chart, warnings about possibly fake reviews, and an "ask the reviews" box. Up to 4 hotels can be compared side by side,
 and any report or comparison can be saved as PDF (browser print, with a print-friendly layout). Reports are available in Turkish, English and German, and reviews in
 any language are analyzed together.
 
@@ -29,6 +29,12 @@ frontend/  Next.js app: search page and hotel report page
 4. **Aggregate** (plain code): topic scores = share of positive mentions × 10.
 5. **Summarize** (`claude-sonnet-5-5`): ranked pros and cons with quotes, and a 3-4 sentence
    summary in the reader's language. Server-side refusal fallbacks are enabled.
+
+**Review trust signals** (`backend/app/trust.py`, plain code, no extra Claude calls) flag a
+report for caution when one source scores far above the others, many 5-star reviews arrive within
+a few days, texts are near-duplicates, a rating contradicts its text, or many 5-star reviews are only
+a few words. They are hints, not proof, and thresholds are conservative because the MVP sees only
+about 5 reviews per source. The fictional `demo:sunrise` hotel is built to trigger them.
 
 Reports are built in a background task: `POST /report` starts a build and the page polls
 `GET /report` until it is done. Finished reports are stored in the database and reused for

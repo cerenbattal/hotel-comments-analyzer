@@ -1,0 +1,43 @@
+{
+  "_note": "Fictional hotel and reviews written for demo and development. Not real guest data. Built to show the suspicious-review warnings.",
+  "hotel": {
+    "id": "demo:sunrise",
+    "name": "Sunrise Demo Resort (fictional)",
+    "address": "Demo Beach Road 42, Antalya, Türkiye",
+    "rating": 4.9,
+    "review_count": 410
+  },
+  "sources": [
+    {
+      "source": "google",
+      "source_label": "Google Maps (demo)",
+      "external_id": "demo-google-sunrise",
+      "rating": 4.9,
+      "scale_max": 5,
+      "review_count": 410,
+      "attribution": "Demo data",
+      "reviews": [
+        {"id": "google:0", "source": "google", "rating": 5, "scale_max": 5, "language": "en", "published": "2026-10-03", "text": "Perfect!"},
+        {"id": "google:1", "source": "google", "rating": 5, "scale_max": 5, "language": "tr", "published": "2026-10-03", "text": "Harika otel, herkese tavsiye ederim."},
+        {"id": "google:2", "source": "google", "rating": 5, "scale_max": 5, "language": "en", "published": "2026-10-04", "text": "Best hotel ever, amazing staff and amazing food, highly recommended to everyone."},
+        {"id": "google:3", "source": "google", "rating": 5, "scale_max": 5, "language": "en", "published": "2026-10-05", "text": "Best hotel ever, amazing staff and amazing food, highly recommended to everyone!"},
+        {"id": "google:4", "source": "google", "rating": 5, "scale_max": 5, "language": "de", "published": "2026-10-05", "text": "Super Hotel!"},
+        {"id": "google:5", "source": "google", "rating": 2, "scale_max": 5, "language": "en", "published": "2026-08-12", "text": "The room smelled of damp and the pool was closed for most of our stay. Staff were not helpful."}
+      ]
+    },
+    {
+      "source": "tripadvisor",
+      "source_label": "Tripadvisor (demo)",
+      "external_id": "demo-ta-sunrise",
+      "rating": 3.4,
+      "scale_max": 5,
+      "review_count": 215,
+      "attribution": "Demo data",
+      "reviews": [
+        {"id": "tripadvisor:0", "source": "tripadvisor", "rating": 3, "scale_max": 5, "language": "en", "published": "2026-09-20", "text": "Nice beach but the rooms are old and the buffet was repetitive. Wi-Fi did not work in our room."},
+        {"id": "tripadvisor:1", "source": "tripadvisor", "rating": 2, "scale_max": 5, "language": "de", "published": "2026-08-30", "text": "Zimmer laut und nicht sauber, Personal unfreundlich. Nur der Strand war gut."},
+        {"id": "tripadvisor:2", "source": "tripadvisor", "rating": 4, "scale_max": 5, "language": "tr", "published": "2026-07-18", "text": "Plajı güzel, animasyon ekibi iyi. Odalar biraz eski ama fiyatına göre idare eder."}
+      ]
+    }
+  ]
+}

@@ -185,7 +185,7 @@ async def test_demo_search_report_history_and_ask(api):
     client, svc, analyzer = api
     assert (await client.get("/api/health")).json()["demo_mode"] is True
     hotels = (await client.get("/api/hotels/search", params={"q": "antalya"})).json()
-    assert {h["id"] for h in hotels} == {"demo:seaside", "demo:harbor"}
+    assert {h["id"] for h in hotels} == {"demo:seaside", "demo:harbor", "demo:sunrise"}
     hotel_id = "demo:seaside"
     url = f"/api/hotels/{hotel_id}/report"
 
@@ -202,6 +202,7 @@ async def test_demo_search_report_history_and_ask(api):
     assert report["analyzed_reviews"] == 13
     assert report["topics"][0] == {"topic": "location", "score_10": 10.0, "positive": 13, "negative": 0}
     assert 7 < report["overall_score_10"] < 9
+    assert report["trust"] == {"level": "ok", "flags": []}
 
     # A fresh report is served from the database without rebuilding.
     again = await client.post(url, params={"lang": "tr"})
