@@ -200,6 +200,24 @@ function HotelReport() {
             </Card>
           )}
 
+          {report.trust && (
+            <Card title={s.trust}>
+              {report.trust.level === "ok" ? (
+                <p className="text-sm">✓ {s.trustOk}</p>
+              ) : (
+                <div className="rounded-lg bg-amber-50 p-3 text-sm text-amber-950 ring-1 ring-amber-200">
+                  <p className="font-medium">⚠ {s.trustCaution}</p>
+                  <ul className="mt-2 list-disc space-y-1 pl-5">
+                    {report.trust.flags.map((f, i) => (
+                      <li key={i}>{s.trustFlag[f.code](f)}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              <p className="mt-2 text-xs text-slate-500">{s.trustNote}</p>
+            </Card>
+          )}
+
           <Card title={s.bySource}>
             <table className="w-full text-sm">
               <tbody>

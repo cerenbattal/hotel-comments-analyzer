@@ -152,6 +152,20 @@ function Compare() {
                   </tr>
                 );
               })}
+              <tr className="border-b border-slate-100">
+                <td className="p-3 text-slate-600">{s.trust}</td>
+                {ready.map((r) => (
+                  <td key={r.hotel_id} className="p-3">
+                    {!r.trust ? (
+                      "–"
+                    ) : r.trust.level === "ok" ? (
+                      <span className="text-emerald-700">✓</span>
+                    ) : (
+                      <span className="text-amber-700">⚠ {r.trust.flags.length}</span>
+                    )}
+                  </td>
+                ))}
+              </tr>
               {(["pros", "cons"] as const).map((kind) => (
                 <tr key={kind} className="border-b border-slate-100 align-top last:border-0">
                   <td className="p-3 text-slate-600">{kind === "pros" ? s.topPros : s.topCons}</td>

@@ -32,6 +32,20 @@ export interface Point {
   quotes: string[];
 }
 
+export interface TrustFlag {
+  code: "source_gap" | "five_star_burst" | "duplicate_text" | "rating_text_mismatch" | "short_five_star";
+  source: string | null;
+  gap: number | null;
+  count: number | null;
+  total: number | null;
+  days: number | null;
+}
+
+export interface Trust {
+  level: "ok" | "caution";
+  flags: TrustFlag[];
+}
+
 export interface Report {
   hotel_id: string;
   hotel_name: string;
@@ -45,6 +59,7 @@ export interface Report {
   pros: Point[];
   cons: Point[];
   summary: string;
+  trust?: Trust; // absent on reports stored before this feature
 }
 
 export interface ReportJob {
