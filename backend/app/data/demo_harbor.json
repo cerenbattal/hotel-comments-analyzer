@@ -1,0 +1,42 @@
+{
+  "_note": "Fictional hotel and reviews written for demo and development. Not real guest data.",
+  "hotel": {
+    "id": "demo:harbor",
+    "name": "Old Harbor Demo Boutique (fictional)",
+    "address": "Demo Harbor Lane 7, Antalya, Türkiye",
+    "rating": 4.6,
+    "review_count": 640
+  },
+  "sources": [
+    {
+      "source": "google",
+      "source_label": "Google Maps (demo)",
+      "external_id": "demo-google-harbor",
+      "rating": 4.6,
+      "scale_max": 5,
+      "review_count": 640,
+      "attribution": "Demo data",
+      "reviews": [
+        {"id": "google:0", "source": "google", "rating": 5, "scale_max": 5, "language": "tr", "published": "2026-10-02", "text": "Kaleiçi'nde, tarihi bir binada çok şık bir otel. Odalar tertemiz, sessiz ve sakin. Kahvaltı bahçede servis ediliyor, harikaydı."},
+        {"id": "google:1", "source": "google", "rating": 5, "scale_max": 5, "language": "en", "published": "2026-09-18", "text": "Beautiful boutique hotel, very quiet at night. The owner gave us great restaurant tips. Spotless rooms."},
+        {"id": "google:2", "source": "google", "rating": 4, "scale_max": 5, "language": "de", "published": "2026-08-25", "text": "Sehr schönes, ruhiges Hotel in der Altstadt. Zimmer klein, aber sauber. Zum Strand braucht man ein Taxi."},
+        {"id": "google:3", "source": "google", "rating": 3, "scale_max": 5, "language": "en", "published": "2026-07-14", "text": "Lovely staff, but the room was tiny and expensive for what you get. No pool, and the beach is 20 minutes away."},
+        {"id": "google:4", "source": "google", "rating": 5, "scale_max": 5, "language": "tr", "published": "2026-06-01", "text": "Personel çok nazik, Wi-Fi hızlı, oda temiz. Plaja uzak ama Kaleiçi'nin ortasında olmak buna değer."}
+      ]
+    },
+    {
+      "source": "tripadvisor",
+      "source_label": "Tripadvisor (demo)",
+      "external_id": "demo-ta-harbor",
+      "rating": 4.5,
+      "scale_max": 5,
+      "review_count": 388,
+      "attribution": "Demo data",
+      "reviews": [
+        {"id": "tripadvisor:0", "source": "tripadvisor", "rating": 5, "scale_max": 5, "language": "en", "published": "2026-09-30", "text": "Charming and peaceful. Homemade breakfast was the highlight. Fast Wi-Fi, which is rare in the old town."},
+        {"id": "tripadvisor:1", "source": "tripadvisor", "rating": 4, "scale_max": 5, "language": "de", "published": "2026-08-11", "text": "Freundliches Personal, sehr sauber. Preis etwas hoch, Zimmer eher klein."},
+        {"id": "tripadvisor:2", "source": "tripadvisor", "rating": 4, "scale_max": 5, "language": "tr", "published": "2026-05-20", "text": "Sessiz ve temiz bir otel, kahvaltısı çok güzel. Fiyatı biraz yüksek, otopark yok."}
+      ]
+    }
+  ]
+}

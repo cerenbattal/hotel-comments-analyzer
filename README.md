@@ -1,8 +1,9 @@
 # Hotel Comments Analyzer
 
 Search a hotel and see its guest reviews from several sites in one report: a score per source,
-a normalized overall score (0-10), the main pros and cons with real quotes, scores by topic, and
-an "ask the reviews" box. Reports are available in Turkish, English and German, and reviews in
+a normalized overall score (0-10), the main pros and cons with real quotes, scores by topic, a
+score-over-time chart, and an "ask the reviews" box. Up to 4 hotels can be compared side by side,
+and any report or comparison can be saved as PDF (browser print, with a print-friendly layout). Reports are available in Turkish, English and German, and reviews in
 any language are analyzed together.
 
 MVP sources: **Google Places API** and **Tripadvisor Content API** (each returns the rating, the
@@ -68,8 +69,8 @@ cp .env.example .env.local
 npm run dev            # http://localhost:3000
 ```
 
-**Demo mode:** with no Google or Tripadvisor key, search always returns a bundled *fictional*
-hotel (`backend/app/data/demo_hotel.json`) so the app can be tried end to end. An Anthropic API
+**Demo mode:** with no Google or Tripadvisor key, search always returns the bundled *fictional*
+hotels (`backend/app/data/demo_*.json`) so the app can be tried end to end. An Anthropic API
 key is still needed for the analysis.
 
 ## API
