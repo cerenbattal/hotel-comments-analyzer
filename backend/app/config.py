@@ -27,6 +27,18 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:3000"
     cache_ttl_seconds: int = 6 * 60 * 60
 
+    # Request limits that keep API costs bounded once the site is public (0 = off).
+    # Per client IP; only new report builds count, cached reports are free.
+    limit_search_per_minute: int = 30
+    limit_builds_per_hour: int = 20
+    limit_asks_per_hour: int = 30
+    # For the whole server, so many visitors together cannot run up the Claude bill.
+    limit_builds_per_day: int = 1000
+    limit_asks_per_day: int = 3000
+    # Set when the API runs behind a reverse proxy that sets X-Forwarded-For;
+    # otherwise the header is ignored, because clients could fake it.
+    trust_proxy: bool = False
+
     @property
     def demo_mode(self) -> bool:
         """Without source API keys the app serves a bundled fictional demo hotel."""

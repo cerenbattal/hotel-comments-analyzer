@@ -7,7 +7,7 @@ import { Suspense, useState } from "react";
 import { LangSwitch } from "@/components/LangSwitch";
 import { api, type HotelCandidate, type Lang } from "@/lib/api";
 import { MAX_COMPARE, useCompareList } from "@/lib/compare";
-import { numberLocale, parseLang, t } from "@/lib/i18n";
+import { errorText, numberLocale, parseLang, t } from "@/lib/i18n";
 
 function Home() {
   const router = useRouter();
@@ -31,7 +31,7 @@ function Home() {
     try {
       setResults(await api.search(query.trim(), lang));
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setError(errorText(err, t(lang)));
     } finally {
       setLoading(false);
     }
@@ -60,7 +60,7 @@ function Home() {
         </button>
       </form>
 
-      {error && <p className="mt-4 text-red-700">{s.error}: {error}</p>}
+      {error && <p className="mt-4 text-red-700">{error}</p>}
       {results && results.length === 0 && <p className="mt-6 text-slate-600">{s.noResults}</p>}
 
       <ul className="mt-6 space-y-2">
