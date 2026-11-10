@@ -58,10 +58,3 @@ def make_engine(url: str) -> AsyncEngine:
 
 def make_sessionmaker(engine: AsyncEngine) -> async_sessionmaker:
     return async_sessionmaker(engine, expire_on_commit=False)
-
-
-async def create_tables(engine: AsyncEngine) -> None:
-    # Fine while the schema is small; switch to Alembic migrations before the
-    # first schema change in production.
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)

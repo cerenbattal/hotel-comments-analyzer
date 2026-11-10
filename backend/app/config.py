@@ -18,6 +18,11 @@ class Settings(BaseSettings):
     # (postgresql+asyncpg://user:pass@host/db).
     database_url: str = "sqlite+aiosqlite:///./hotel.db"
 
+    # Daily refresh of source scores (feeds the score-over-time chart). With
+    # several API replicas, enable it on one only.
+    daily_refresh: bool = True
+    daily_refresh_hour_utc: int = 3
+
     # Comma-separated origins allowed to call the API (the Next.js frontend).
     cors_origins: str = "http://localhost:3000"
     cache_ttl_seconds: int = 6 * 60 * 60

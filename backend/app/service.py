@@ -132,7 +132,12 @@ class ReportService:
         cached = self._data_cache.get((hotel_id, lang))
         if cached:
             return cached
+        data = await self._fetch(hotel_id, lang)
+        self._data_cache.set((hotel_id, lang), data)
+        return data
 
+    async def _fetch(self, hotel_id: str, lang: Lang) -> HotelData:
+        """Fetch a hotel from every source, without the cache."""
         if hotel_id.startswith("demo:"):
             demo = demo_data(hotel_id)
             if demo is None:
@@ -157,7 +162,6 @@ class ReportService:
             data = HotelData(hotel=hotel, sources=sources)
 
         data.reviews = dedupe([r for s in data.sources for r in s.reviews])
-        self._data_cache.set((hotel_id, lang), data)
         return data
 
     # ---------- report jobs ----------
@@ -263,6 +267,32 @@ class ReportService:
                 row.rating, row.scale_max = s.rating, s.scale_max
                 row.score_10, row.review_count = s.score_10, s.review_count
             await session.commit()
+
+    async def refresh_scores(self, active_days: int = 30) -> int:
+        """Save today's score for every real hotel someone opened in the last `active_days`.
+
+        Only the sources' ratings are fetched (no Claude calls), so this is cheap.
+        Returns how many hotels were refreshed.
+        """
+        since = utcnow() - timedelta(days=active_days)
+        async with self.sessions() as session:
+            hotel_ids = list(
+                await session.scalars(
+                    select(ReportRow.hotel_id).where(ReportRow.created_at >= since).distinct()
+                )
+            )
+        refreshed = 0
+        for hotel_id in hotel_ids:
+            if hotel_id.startswith("demo:"):
+                continue  # demo scores never change
+            try:
+                data = await self._fetch(hotel_id, "en")
+                await self._record_scores(data.hotel.id, [source_score(s) for s in data.sources])
+                refreshed += 1
+            except Exception as e:  # one hotel failing must not stop the others
+                log.warning("Score refresh failed for %s: %s", hotel_id, e)
+        log.info("Daily score refresh: %d of %d hotels", refreshed, len(hotel_ids))
+        return refreshed
 
     async def history(self, hotel_id: str) -> list[HistoryPoint]:
         async with self.sessions() as session:

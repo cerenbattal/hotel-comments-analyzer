@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from contextlib import asynccontextmanager
 
 import httpx
@@ -9,8 +10,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from .analysis import AnalysisError, ClaudeAnalyzer
 from .config import get_settings
 from .connectors import SourceError
-from .db import create_tables, make_engine, make_sessionmaker
+from .db import make_engine, make_sessionmaker
+from .migrate import upgrade as migrate_db
 from .models import AskAnswer, AskRequest, HistoryPoint, HotelCandidate, Lang, ReportJob
+from .scheduler import run_daily
 from .service import NotFound, ReportService
 
 
@@ -20,17 +23,25 @@ async def lifespan(app: FastAPI):
         yield
         return
     settings = get_settings()
+    await asyncio.to_thread(migrate_db, settings.database_url)
     engine = make_engine(settings.database_url)
-    await create_tables(engine)
     async with httpx.AsyncClient(timeout=20) as http:
-        app.state.service = ReportService(
+        svc = ReportService(
             settings,
             ClaudeAnalyzer(settings.extraction_model, settings.summary_model),
             http,
             make_sessionmaker(engine),
         )
+        app.state.service = svc
+        refresher = (
+            asyncio.create_task(run_daily(svc.refresh_scores, settings.daily_refresh_hour_utc))
+            if settings.daily_refresh
+            else None
+        )
         yield
-        await app.state.service.wait_for_builds()
+        if refresher:
+            refresher.cancel()
+        await svc.wait_for_builds()
     await engine.dispose()
 
 

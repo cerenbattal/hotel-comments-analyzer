@@ -33,7 +33,9 @@ frontend/  Next.js app: search page and hotel report page
 Reports are built in a background task: `POST /report` starts a build and the page polls
 `GET /report` until it is done. Finished reports are stored in the database and reused for
 6 hours. Each build also saves every source's score for that day, which feeds the
-"score over time" chart. Raw review text is kept only in memory (Google's terms limit storing it).
+"score over time" chart. Once a day (03:00 UTC by default) the API also refreshes the scores of
+every hotel opened in the last 30 days, so the chart fills in even without visits. That refresh
+only calls Google and Tripadvisor, never Claude. Raw review text is kept only in memory (Google's terms limit storing it).
 
 ## Running locally
 
@@ -46,6 +48,17 @@ docker compose up --build
 
 App: http://localhost:3000 · API docs: http://localhost:8000/docs · Postgres runs in its own
 container and keeps its data in a Docker volume.
+
+### Database migrations
+
+The schema is managed with Alembic (`backend/migrations/`). The API applies pending migrations
+on startup, so nothing extra is needed to run it. To change the schema: edit `app/db.py`, then
+
+```bash
+cd backend
+alembic revision --autogenerate -m "describe the change"   # review the generated file
+alembic upgrade head
+```
 
 ### Without Docker
 
@@ -92,8 +105,6 @@ key is still needed for the analysis.
 
 ## Next steps
 
-- A daily job that refreshes popular hotels, so score history fills in without visits.
-- Alembic migrations before the first schema change in production.
 - Move builds to a job queue (Celery/Redis or similar) if one server is no longer enough.
 - Sentiment by topic over time, once dated review history is available from partner or vendor data.
 - Booking.com / Expedia Rapid / Agoda affiliate connectors after partner approval.

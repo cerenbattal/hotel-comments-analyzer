@@ -5,7 +5,15 @@ import pytest
 
 from app.analysis import ReviewInsight, Summary, TopicMention, phrase_counts, topic_scores
 from app.config import Settings
-from app.db import create_tables, make_engine, make_sessionmaker
+import asyncio
+from datetime import datetime, timedelta, timezone
+
+from sqlalchemy import inspect
+
+from app.db import Base, ReportRow, ScoreSnapshot, make_engine, make_sessionmaker
+from app.migrate import upgrade as migrate_db
+from app.scheduler import seconds_until
+from app.service import HotelData
 from app.connectors import GooglePlaces, Tripadvisor
 from app.models import AskAnswer, HotelCandidate, Point, Review, SourceScore
 from app.normalize import overall_score, to_ten
@@ -161,8 +169,9 @@ class FakeAnalyzer:
 async def api(tmp_path):
     from app.main import app
 
-    engine = make_engine(f"sqlite+aiosqlite:///{tmp_path}/test.db")
-    await create_tables(engine)
+    url = f"sqlite+aiosqlite:///{tmp_path}/test.db"
+    await asyncio.to_thread(migrate_db, url)
+    engine = make_engine(url)
     analyzer = FakeAnalyzer()
     svc = ReportService(Settings(_env_file=None), analyzer, httpx.AsyncClient(), make_sessionmaker(engine))
     app.state.service = svc
@@ -226,3 +235,83 @@ async def test_unknown_hotel_build_fails(api):
     await svc.wait_for_builds()
     job = (await client.get("/api/hotels/demo:nope/report")).json()
     assert job == {"status": "failed", "report": None, "error": "Hotel not found"}
+
+
+# ---------- migrations ----------
+
+
+async def _schema(url):
+    engine = make_engine(url)
+    async with engine.connect() as conn:
+        result = await conn.run_sync(
+            lambda c: {
+                t: sorted(col["name"] for col in inspect(c).get_columns(t))
+                for t in inspect(c).get_table_names()
+                if t != "alembic_version"
+            }
+        )
+    await engine.dispose()
+    return result
+
+
+async def test_migrations_match_models(tmp_path):
+    url = f"sqlite+aiosqlite:///{tmp_path}/m.db"
+    await asyncio.to_thread(migrate_db, url)
+    expected = {t.name: sorted(c.name for c in t.columns) for t in Base.metadata.sorted_tables}
+    assert await _schema(url) == expected
+
+
+async def test_database_from_before_migrations_is_stamped(tmp_path):
+    url = f"sqlite+aiosqlite:///{tmp_path}/old.db"
+    engine = make_engine(url)
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    await engine.dispose()
+    await asyncio.to_thread(migrate_db, url)  # must not try to re-create tables
+    await asyncio.to_thread(migrate_db, url)  # and is safe to run again
+
+
+# ---------- daily refresh ----------
+
+
+def test_seconds_until():
+    now = datetime(2026, 11, 10, 2, 30, tzinfo=timezone.utc)
+    assert seconds_until(3, now) == 30 * 60
+    assert seconds_until(2, now) == 23.5 * 3600
+
+
+async def test_refresh_scores_only_recent_real_hotels(api):
+    _, svc, _ = api
+    now = datetime.now(timezone.utc)
+    async with svc.sessions() as session:
+        session.add_all(
+            [
+                ReportRow(hotel_id="g-recent", lang="tr", status="done", created_at=now),
+                ReportRow(hotel_id="g-recent", lang="en", status="done", created_at=now),
+                ReportRow(hotel_id="g-old", lang="tr", status="done", created_at=now - timedelta(days=40)),
+                ReportRow(hotel_id="demo:seaside", lang="tr", status="done", created_at=now),
+                ReportRow(hotel_id="g-broken", lang="tr", status="done", created_at=now),
+            ]
+        )
+        await session.commit()
+
+    fetched = []
+
+    async def fake_fetch(hotel_id, lang):
+        fetched.append(hotel_id)
+        if hotel_id == "g-broken":
+            raise RuntimeError("source down")
+        hotel = HotelCandidate(id=hotel_id, name="H")
+        from app.models import SourceResult
+
+        return HotelData(
+            hotel=hotel,
+            sources=[SourceResult(source="google", source_label="G", external_id=hotel_id,
+                                  rating=4.5, scale_max=5, review_count=99)],
+        )
+
+    svc._fetch = fake_fetch
+    assert await svc.refresh_scores() == 1
+    assert sorted(fetched) == ["g-broken", "g-recent"]
+    points = await svc.history("g-recent")
+    assert [(p.source, p.score_10, p.review_count) for p in points] == [("google", 8.75, 99)]
