@@ -98,10 +98,22 @@ key is still needed for the analysis.
 | --- | --- | --- |
 | GET | `/api/health` | `{ok, demo_mode}` |
 | GET | `/api/hotels/search?q=&lang=` | Hotel candidates (Google Places) |
-| POST | `/api/hotels/{id}/report?lang=tr\|en\|de` | Start a build, or return a fresh report |
+| POST | `/api/hotels/{id}/report?lang=tr\|en\|de\|fr\|es\|ru\|ar` | Start a build, or return a fresh report |
 | GET | `/api/hotels/{id}/report?lang=` | `{status: running\|done\|failed, report, error}` |
 | GET | `/api/hotels/{id}/history` | Daily score per source |
 | POST | `/api/hotels/{id}/ask` | `{question, lang}` → `{answer, quotes}` |
+
+### Request limits
+
+Search, new report builds and questions are limited per visitor IP, and builds and questions also have a
+daily cap for the whole server, so a public site cannot run up an unbounded Claude or Google bill.
+Over a per-visitor limit the API answers 429, over a daily cap 503, both with `Retry-After`; the site
+shows a short message in the visitor's language. Cached reports never count. Defaults and settings are in
+`backend/.env.example`. Counters are kept in memory per API process.
+
+## Continuous integration
+
+`.github/workflows/ci.yml` runs the backend tests and the frontend lint and build on every pull request.
 
 ## Terms to respect
 

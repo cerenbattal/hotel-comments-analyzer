@@ -11,6 +11,7 @@ import logging
 import time
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone
+from typing import Callable
 
 import httpx
 from sqlalchemy import select
@@ -180,8 +181,13 @@ class ReportService:
             row = await self._latest(session, hotel_id, lang)
             return _job(row) if row else None
 
-    async def start_report(self, hotel_id: str, lang: Lang) -> ReportJob:
-        """Return a fresh finished report, the build in progress, or start a new build."""
+    async def start_report(
+        self, hotel_id: str, lang: Lang, before_build: Callable[[], None] | None = None
+    ) -> ReportJob:
+        """Return a fresh finished report, the build in progress, or start a new build.
+
+        before_build runs only when a new build is about to start; it may raise to refuse it.
+        """
         async with self._start_lock, self.sessions() as session:
             row = await self._latest(session, hotel_id, lang)
             now = utcnow()
@@ -192,6 +198,8 @@ class ReportService:
             if row and row.status == "running" and now - _aware(row.created_at) < STALE_BUILD:
                 return _job(row)
 
+            if before_build:
+                before_build()
             row = ReportRow(hotel_id=hotel_id, lang=lang, status="running")
             session.add(row)
             await session.commit()

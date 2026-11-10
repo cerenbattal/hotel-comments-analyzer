@@ -7,7 +7,7 @@ import { Suspense, useEffect, useState } from "react";
 import { HistoryChart } from "@/components/HistoryChart";
 import { LangSwitch } from "@/components/LangSwitch";
 import { api, loadReport, type AskAnswer, type HistoryPoint, type Lang, type Point, type Report } from "@/lib/api";
-import { numberLocale, parseLang, t, type Strings } from "@/lib/i18n";
+import { errorText, numberLocale, parseLang, t, type Strings } from "@/lib/i18n";
 
 function scoreColor(score: number) {
   if (score >= 8) return "bg-emerald-600";
@@ -70,7 +70,7 @@ function Ask({ hotelId, lang, s }: { hotelId: string; lang: Lang; s: Strings }) 
     try {
       setAnswer(await api.ask(hotelId, question.trim(), lang));
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setError(errorText(err, t(lang)));
     } finally {
       setLoading(false);
     }
@@ -93,7 +93,7 @@ function Ask({ hotelId, lang, s }: { hotelId: string; lang: Lang; s: Strings }) 
           {loading ? s.asking : s.askButton}
         </button>
       </form>
-      {error && <p className="mt-3 text-red-700">{s.error}: {error}</p>}
+      {error && <p className="mt-3 text-red-700">{error}</p>}
       {answer && (
         <div className="mt-4">
           <p>{answer.answer}</p>
@@ -133,7 +133,7 @@ function HotelReport() {
       setReport(r);
       setHistory(await api.history(hotelId));
     }
-    load().catch((err) => !cancelled && setError(err instanceof Error ? err.message : String(err)));
+    load().catch((err) => !cancelled && setError(errorText(err, t(lang))));
     return () => {
       cancelled = true;
     };
@@ -160,7 +160,7 @@ function HotelReport() {
         </div>
       </div>
 
-      {error && <p className="text-red-700">{s.error}: {error}</p>}
+      {error && <p className="text-red-700">{error}</p>}
       {!report && !error && (
         <p className="animate-pulse rounded-xl bg-white p-6 text-slate-600 ring-1 ring-slate-200">
           {s.loadingReport}

@@ -17,6 +17,7 @@ from app.service import HotelData
 from app.connectors import GooglePlaces, Tripadvisor
 from app.models import AskAnswer, HotelCandidate, Point, Review, SourceScore
 from app.normalize import overall_score, to_ten
+from app.ratelimit import Limits
 from app.service import ReportService, dedupe
 
 
@@ -175,9 +176,10 @@ async def api(tmp_path):
     analyzer = FakeAnalyzer()
     svc = ReportService(Settings(_env_file=None), analyzer, httpx.AsyncClient(), make_sessionmaker(engine))
     app.state.service = svc
+    app.state.limits = Limits(Settings(_env_file=None))
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
         yield c, svc, analyzer
-    del app.state.service
+    del app.state.service, app.state.limits
     await engine.dispose()
 
 

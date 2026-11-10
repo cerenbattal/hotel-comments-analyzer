@@ -7,7 +7,7 @@ import { Suspense, useEffect, useState } from "react";
 import { LangSwitch } from "@/components/LangSwitch";
 import { loadReport, type Lang, type Report } from "@/lib/api";
 import { MAX_COMPARE } from "@/lib/compare";
-import { numberLocale, parseLang, t, type Strings } from "@/lib/i18n";
+import { errorText, numberLocale, parseLang, t, type Strings } from "@/lib/i18n";
 
 type Row = { label: string; values: (number | null)[] };
 
@@ -64,7 +64,7 @@ function Compare() {
         .then((r) => {
           if (r && !cancelled) setReports((prev) => prev.map((p, j) => (j === i ? r : p)));
         })
-        .catch((err) => !cancelled && setError(err instanceof Error ? err.message : String(err))),
+        .catch((err) => !cancelled && setError(errorText(err, t(lang)))),
     );
     return () => {
       cancelled = true;
@@ -96,7 +96,7 @@ function Compare() {
       <h1 className="mb-6 text-2xl font-semibold">{s.compareTitle}</h1>
 
       {ids.length < 2 && <p className="text-slate-600">{s.comparePickMore}</p>}
-      {error && <p className="text-red-700">{s.error}: {error}</p>}
+      {error && <p className="text-red-700">{error}</p>}
       {ids.length >= 2 && !ready && !error && (
         <p className="animate-pulse rounded-xl bg-white p-6 text-slate-600 ring-1 ring-slate-200">
           {s.compareLoading} ({reports.filter(Boolean).length}/{ids.length})

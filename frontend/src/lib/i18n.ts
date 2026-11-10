@@ -1,4 +1,4 @@
-import type { Lang, TrustFlag as TF } from "./api";
+import { ApiError, type Lang, type TrustFlag as TF } from "./api";
 
 export const LANGS: { code: Lang; label: string }[] = [
   { code: "tr", label: "Türkçe" },
@@ -60,6 +60,8 @@ const strings = {
     },
     back: "← Yeni arama",
     error: "Bir hata oluştu",
+    tooMany: "Kısa sürede çok fazla istek gönderildi. Lütfen biraz bekleyip tekrar deneyin.",
+    busy: "Bugünkü kapasite doldu. Lütfen daha sonra tekrar deneyin.",
     demo: "Demo veri: kurgusal otel ve yorumlar",
     topicNames: {
       cleanliness: "Temizlik", staff: "Personel", location: "Konum", room: "Oda",
@@ -116,6 +118,8 @@ const strings = {
     },
     back: "← New search",
     error: "Something went wrong",
+    tooMany: "Too many requests in a short time. Please wait a moment and try again.",
+    busy: "We have reached today's capacity. Please try again later.",
     demo: "Demo data: fictional hotel and reviews",
     topicNames: {
       cleanliness: "Cleanliness", staff: "Staff", location: "Location", room: "Room",
@@ -172,6 +176,8 @@ const strings = {
     },
     back: "← Neue Suche",
     error: "Ein Fehler ist aufgetreten",
+    tooMany: "Zu viele Anfragen in kurzer Zeit. Bitte warten Sie kurz und versuchen Sie es erneut.",
+    busy: "Die heutige Kapazität ist erreicht. Bitte versuchen Sie es später erneut.",
     demo: "Demodaten: fiktives Hotel und Bewertungen",
     topicNames: {
       cleanliness: "Sauberkeit", staff: "Personal", location: "Lage", room: "Zimmer",
@@ -228,6 +234,8 @@ const strings = {
     },
     back: "← Nouvelle recherche",
     error: "Une erreur est survenue",
+    tooMany: "Trop de demandes en peu de temps. Patientez un instant puis réessayez.",
+    busy: "La capacité du jour est atteinte. Veuillez réessayer plus tard.",
     demo: "Données de démo : hôtel et avis fictifs",
     topicNames: {
       cleanliness: "Propreté", staff: "Personnel", location: "Emplacement", room: "Chambre",
@@ -284,6 +292,8 @@ const strings = {
     },
     back: "← Nueva búsqueda",
     error: "Se produjo un error",
+    tooMany: "Demasiadas solicitudes en poco tiempo. Espera un momento y vuelve a intentarlo.",
+    busy: "Hemos alcanzado la capacidad de hoy. Inténtalo de nuevo más tarde.",
     demo: "Datos de demostración: hotel y opiniones ficticios",
     topicNames: {
       cleanliness: "Limpieza", staff: "Personal", location: "Ubicación", room: "Habitación",
@@ -340,6 +350,8 @@ const strings = {
     },
     back: "← Новый поиск",
     error: "Произошла ошибка",
+    tooMany: "Слишком много запросов за короткое время. Подождите немного и попробуйте снова.",
+    busy: "Дневной лимит исчерпан. Пожалуйста, попробуйте позже.",
     demo: "Демо-данные: вымышленный отель и отзывы",
     topicNames: {
       cleanliness: "Чистота", staff: "Персонал", location: "Расположение", room: "Номер",
@@ -396,6 +408,8 @@ const strings = {
     },
     back: "→ بحث جديد",
     error: "حدث خطأ",
+    tooMany: "طلبات كثيرة خلال وقت قصير. يُرجى الانتظار قليلًا ثم المحاولة مجددًا.",
+    busy: "وصلنا إلى الحد الأقصى لليوم. يُرجى المحاولة لاحقًا.",
     demo: "بيانات تجريبية: فندق وتقييمات خيالية",
     topicNames: {
       cleanliness: "النظافة", staff: "الموظفون", location: "الموقع", room: "الغرفة",
@@ -421,4 +435,11 @@ export function t(lang: Lang): Strings {
 
 export function parseLang(value: string | null | undefined): Lang {
   return LANGS.some((l) => l.code === value) ? (value as Lang) : "tr";
+}
+
+/** Text to show for a failed request, with a clear message when a request limit was hit. */
+export function errorText(err: unknown, s: Strings): string {
+  if (err instanceof ApiError && err.status === 429) return s.tooMany;
+  if (err instanceof ApiError && err.status === 503) return s.busy;
+  return `${s.error}: ${err instanceof Error ? err.message : String(err)}`;
 }
