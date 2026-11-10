@@ -100,6 +100,21 @@ class Report(BaseModel):
     summary: str
 
 
+class ReportJob(BaseModel):
+    """State of a report build. The frontend polls this until it is done or failed."""
+
+    status: Literal["running", "done", "failed"]
+    report: Report | None = None
+    error: str | None = None
+
+
+class HistoryPoint(BaseModel):
+    source: str
+    day: date
+    score_10: float | None
+    review_count: int
+
+
 class AskRequest(BaseModel):
     question: str = Field(min_length=3, max_length=500)
     lang: Lang = "en"

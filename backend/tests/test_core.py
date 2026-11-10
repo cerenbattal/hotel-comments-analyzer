@@ -1,9 +1,11 @@
+from datetime import date
+
 import httpx
 import pytest
-from fastapi.testclient import TestClient
 
 from app.analysis import ReviewInsight, Summary, TopicMention, phrase_counts, topic_scores
 from app.config import Settings
+from app.db import create_tables, make_engine, make_sessionmaker
 from app.connectors import GooglePlaces, Tripadvisor
 from app.models import AskAnswer, HotelCandidate, Point, Review, SourceScore
 from app.normalize import overall_score, to_ten
@@ -133,14 +135,18 @@ async def test_tripadvisor_fetch_matches_and_parses():
     assert result.reviews[0].text == "Nice Clean rooms"
 
 
-# ---------- API (demo data, fake analyzer) ----------
+# ---------- API (demo data, fake analyzer, temporary SQLite) ----------
 
 
 class FakeAnalyzer:
+    def __init__(self):
+        self.summaries = 0
+
     async def extract(self, reviews):
         return [_insight(r.id, [("location", "positive")], pros=["near the beach"]) for r in reviews]
 
     async def summarize(self, hotel_name, reviews, insights, lang):
+        self.summaries += 1
         return Summary(
             summary=f"{hotel_name} in {lang}",
             pros=[Point(text="near the beach", mentions=len(insights), quotes=["Lage direkt am Strand"])],
@@ -152,30 +158,69 @@ class FakeAnalyzer:
 
 
 @pytest.fixture
-def client():
+async def api(tmp_path):
     from app.main import app
 
-    app.state.service = ReportService(Settings(_env_file=None), FakeAnalyzer(), httpx.AsyncClient())
-    with TestClient(app) as c:
-        yield c
+    engine = make_engine(f"sqlite+aiosqlite:///{tmp_path}/test.db")
+    await create_tables(engine)
+    analyzer = FakeAnalyzer()
+    svc = ReportService(Settings(_env_file=None), analyzer, httpx.AsyncClient(), make_sessionmaker(engine))
+    app.state.service = svc
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
+        yield c, svc, analyzer
     del app.state.service
+    await engine.dispose()
 
 
-def test_demo_search_report_and_ask(client):
-    assert client.get("/api/health").json()["demo_mode"] is True
-    hotels = client.get("/api/hotels/search", params={"q": "antalya"}).json()
-    hotel_id = hotels[0]["id"]
+async def test_demo_search_report_history_and_ask(api):
+    client, svc, analyzer = api
+    assert (await client.get("/api/health")).json()["demo_mode"] is True
+    hotel_id = (await client.get("/api/hotels/search", params={"q": "antalya"})).json()[0]["id"]
+    url = f"/api/hotels/{hotel_id}/report"
 
-    report = client.get(f"/api/hotels/{hotel_id}/report", params={"lang": "tr"}).json()
+    assert (await client.get(url, params={"lang": "tr"})).status_code == 404  # nothing built yet
+    start = await client.post(url, params={"lang": "tr"})
+    assert start.status_code == 202 and start.json()["status"] == "running"
+    await svc.wait_for_builds()
+
+    job = (await client.get(url, params={"lang": "tr"})).json()
+    assert job["status"] == "done"
+    report = job["report"]
     assert report["lang"] == "tr"
     assert [s["source"] for s in report["sources"]] == ["google", "tripadvisor"]
     assert report["analyzed_reviews"] == 13
     assert report["topics"][0] == {"topic": "location", "score_10": 10.0, "positive": 13, "negative": 0}
     assert 7 < report["overall_score_10"] < 9
 
-    answer = client.post(f"/api/hotels/{hotel_id}/ask", json={"question": "Is it quiet?"}).json()
+    # A fresh report is served from the database without rebuilding.
+    again = await client.post(url, params={"lang": "tr"})
+    assert again.status_code == 200 and again.json()["status"] == "done"
+    assert analyzer.summaries == 1
+
+    history = (await client.get(f"/api/hotels/{hotel_id}/history")).json()
+    assert [h["source"] for h in history] == ["google", "tripadvisor"]
+    assert history[0]["score_10"] == 8.25
+
+    answer = (await client.post(f"/api/hotels/{hotel_id}/ask", json={"question": "Is it quiet?"})).json()
     assert answer["answer"] == "13 reviews: Is it quiet?"
 
 
-def test_unknown_hotel_is_404(client):
-    assert client.get("/api/hotels/demo:nope/report").status_code == 404
+async def test_same_day_snapshot_is_replaced(api):
+    _, svc, _ = api
+    s = lambda score: SourceScore(source="google", source_label="G", rating=None, scale_max=5,  # noqa: E731
+                                  score_10=score, review_count=10)
+    await svc._record_scores("h1", [s(6.0)], day=date(2026, 11, 1))
+    await svc._record_scores("h1", [s(7.0)], day=date(2026, 11, 1))
+    await svc._record_scores("h1", [s(8.0)], day=date(2026, 11, 2))
+    assert [(str(p.day), p.score_10) for p in await svc.history("h1")] == [
+        ("2026-11-01", 7.0),
+        ("2026-11-02", 8.0),
+    ]
+
+
+async def test_unknown_hotel_build_fails(api):
+    client, svc, _ = api
+    await client.post("/api/hotels/demo:nope/report")
+    await svc.wait_for_builds()
+    job = (await client.get("/api/hotels/demo:nope/report")).json()
+    assert job == {"status": "failed", "report": None, "error": "Hotel not found"}
