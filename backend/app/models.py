@@ -7,7 +7,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-Lang = Literal["tr", "en", "de"]
+Lang = Literal["tr", "en", "de", "fr", "es", "ru", "ar"]
 
 Topic = Literal[
     "cleanliness",

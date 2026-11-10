@@ -21,7 +21,15 @@ from pydantic import BaseModel, Field
 
 from .models import TOPICS, AskAnswer, Lang, Point, Review, Topic, TopicScore
 
-LANG_NAMES = {"tr": "Turkish", "en": "English", "de": "German"}
+LANG_NAMES: dict[str, str] = {
+    "tr": "Turkish",
+    "en": "English",
+    "de": "German",
+    "fr": "French",
+    "es": "Spanish",
+    "ru": "Russian",
+    "ar": "Arabic",
+}
 EXTRACT_BATCH_SIZE = 25
 MAX_PARALLEL_CALLS = 4
 
