@@ -94,3 +94,15 @@ export const api = {
       body: JSON.stringify({ question, lang }),
     }),
 };
+
+/** Start a report build (or reuse a fresh one) and poll until it is finished. */
+export async function loadReport(id: string, lang: Lang, isCancelled: () => boolean): Promise<Report | null> {
+  let job = await api.startReport(id, lang);
+  while (job.status === "running" && !isCancelled()) {
+    await new Promise((r) => setTimeout(r, 2000));
+    job = await api.reportStatus(id, lang);
+  }
+  if (isCancelled()) return null;
+  if (job.status === "failed" || !job.report) throw new Error(job.error ?? "Report failed");
+  return job.report;
+}

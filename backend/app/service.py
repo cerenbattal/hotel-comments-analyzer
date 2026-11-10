@@ -19,7 +19,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 from .analysis import AnalysisError, Analyzer, topic_scores
 from .config import Settings
 from .connectors import GooglePlaces, SourceError, Tripadvisor
-from .connectors.demo import demo_hotel, demo_sources
+from .connectors.demo import demo_data, demo_hotels
 from .db import ReportRow, ScoreSnapshot, utcnow
 from .models import (
     AskAnswer,
@@ -123,7 +123,7 @@ class ReportService:
 
     async def search(self, query: str, lang: Lang) -> list[HotelCandidate]:
         if self.demo_mode:
-            return [demo_hotel()]
+            return demo_hotels()
         return await self._google.search(query, lang)
 
     # ---------- fetching ----------
@@ -134,9 +134,10 @@ class ReportService:
             return cached
 
         if hotel_id.startswith("demo:"):
-            if hotel_id != demo_hotel().id:
+            demo = demo_data(hotel_id)
+            if demo is None:
                 raise NotFound(hotel_id)
-            data = HotelData(hotel=demo_hotel(), sources=demo_sources())
+            data = HotelData(hotel=demo[0], sources=demo[1])
         else:
             if self._google is None:
                 raise NotFound(hotel_id)

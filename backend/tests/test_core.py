@@ -175,7 +175,9 @@ async def api(tmp_path):
 async def test_demo_search_report_history_and_ask(api):
     client, svc, analyzer = api
     assert (await client.get("/api/health")).json()["demo_mode"] is True
-    hotel_id = (await client.get("/api/hotels/search", params={"q": "antalya"})).json()[0]["id"]
+    hotels = (await client.get("/api/hotels/search", params={"q": "antalya"})).json()
+    assert {h["id"] for h in hotels} == {"demo:seaside", "demo:harbor"}
+    hotel_id = "demo:seaside"
     url = f"/api/hotels/{hotel_id}/report"
 
     assert (await client.get(url, params={"lang": "tr"})).status_code == 404  # nothing built yet

@@ -6,7 +6,7 @@ import { Suspense, useEffect, useState } from "react";
 
 import { HistoryChart } from "@/components/HistoryChart";
 import { LangSwitch } from "@/components/LangSwitch";
-import { api, type AskAnswer, type HistoryPoint, type Lang, type Point, type Report } from "@/lib/api";
+import { api, loadReport, type AskAnswer, type HistoryPoint, type Lang, type Point, type Report } from "@/lib/api";
 import { parseLang, t, type Strings } from "@/lib/i18n";
 
 function scoreColor(score: number) {
@@ -15,9 +15,17 @@ function scoreColor(score: number) {
   return "bg-rose-600";
 }
 
-function Card({ title, children }: { title: string; children: React.ReactNode }) {
+function Card({
+  title,
+  children,
+  className = "",
+}: {
+  title: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <section className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+    <section className={`break-inside-avoid rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200 ${className}`}>
       <h2 className="mb-3 font-semibold">{title}</h2>
       {children}
     </section>
@@ -69,7 +77,7 @@ function Ask({ hotelId, lang, s }: { hotelId: string; lang: Lang; s: Strings }) 
   }
 
   return (
-    <Card title={s.ask}>
+    <Card title={s.ask} className="print:hidden">
       <form onSubmit={onAsk} className="flex gap-2">
         <input
           value={question}
@@ -120,14 +128,9 @@ function HotelReport() {
 
     // Start the build (or get a fresh report), then poll until it finishes.
     async function load() {
-      let job = await api.startReport(hotelId, lang);
-      while (job.status === "running" && !cancelled) {
-        await new Promise((r) => setTimeout(r, 2000));
-        job = await api.reportStatus(hotelId, lang);
-      }
-      if (cancelled) return;
-      if (job.status === "failed" || !job.report) throw new Error(job.error ?? "Report failed");
-      setReport(job.report);
+      const r = await loadReport(hotelId, lang, () => cancelled);
+      if (!r) return;
+      setReport(r);
       setHistory(await api.history(hotelId));
     }
     load().catch((err) => !cancelled && setError(err instanceof Error ? err.message : String(err)));
@@ -140,11 +143,21 @@ function HotelReport() {
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-8">
-      <div className="mb-6 flex items-center justify-between gap-4">
+      <div className="mb-6 flex items-center justify-between gap-4 print:hidden">
         <Link href={`/?lang=${lang}`} className="text-sm text-slate-600 hover:text-slate-900">
           {s.back}
         </Link>
-        <LangSwitch lang={lang} onChange={setLang} />
+        <div className="flex items-center gap-2">
+          {report && (
+            <button
+              onClick={() => window.print()}
+              className="rounded-lg bg-white px-3 py-1.5 text-sm shadow-sm ring-1 ring-slate-200 hover:ring-slate-400"
+            >
+              {s.downloadPdf}
+            </button>
+          )}
+          <LangSwitch lang={lang} onChange={setLang} />
+        </div>
       </div>
 
       {error && <p className="text-red-700">{s.error}: {error}</p>}
